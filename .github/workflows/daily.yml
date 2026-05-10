@@ -1,0 +1,35 @@
+name: Daily Strategy Update
+
+on:
+  schedule:
+    - cron: '30 21 * * 1-5'   # 5:30 PM ET (Mon–Fri); adjust if DST shifts UTC offset
+  workflow_dispatch:            # manual trigger from Actions tab
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write           # needed to push docs/ back to repo
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run strategy pipeline
+        run: python run.py
+
+      - name: Commit and push docs
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git add docs/
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+          git commit -m "chore: daily update $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
