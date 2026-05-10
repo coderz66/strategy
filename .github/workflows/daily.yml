@@ -25,6 +25,7 @@ jobs:
       - name: Run strategy pipeline
         env:
           TIINGO_API_KEY: ${{ secrets.TIINGO_API_KEY }}
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
         run: python run.py
 
       - name: Deploy to GitHub Pages

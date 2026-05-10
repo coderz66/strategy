@@ -68,35 +68,87 @@ def fetch_price_history(tickers: list, period: str = "4mo") -> pd.DataFrame:
     return df
 
 
-# ── Fundamental data via yfinance (individual calls, graceful fallback) ───────
+# ── Fundamental data via FMP (free API key, CI-safe) ─────────────────────────
+
+FMP_TOKEN = os.environ.get("FMP_API_KEY", "")
+FMP_BASE  = "https://financialmodelingprep.com/api/v3"
+
 
 def fetch_earnings_history(ticker: str) -> pd.DataFrame:
+    """EPS actual vs estimate via FMP earnings-surprises endpoint."""
+    if not FMP_TOKEN:
+        return pd.DataFrame()
     try:
-        return yf.Ticker(ticker).earnings_history or pd.DataFrame()
+        resp = requests.get(
+            f"{FMP_BASE}/earnings-surprises/{ticker}",
+            params={"apikey": FMP_TOKEN},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return pd.DataFrame()
+        data = resp.json()
+        if not isinstance(data, list) or not data:
+            return pd.DataFrame()
+        rows = [
+            {
+                "epsActual":   d.get("actualEarningResult"),
+                "epsEstimate": d.get("estimatedEarning"),
+                "quarter":     d.get("date", "")[:10],
+            }
+            for d in data
+            if d.get("actualEarningResult") is not None
+        ]
+        return pd.DataFrame(rows) if rows else pd.DataFrame()
     except Exception:
         return pd.DataFrame()
 
 
 def fetch_quarterly_income(ticker: str) -> pd.DataFrame:
+    """Quarterly revenue via FMP income-statement endpoint."""
+    if not FMP_TOKEN:
+        return pd.DataFrame()
     try:
-        return yf.Ticker(ticker).quarterly_income_stmt or pd.DataFrame()
+        resp = requests.get(
+            f"{FMP_BASE}/income-statement/{ticker}",
+            params={"period": "quarter", "limit": 4, "apikey": FMP_TOKEN},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return pd.DataFrame()
+        data = resp.json()
+        if not isinstance(data, list) or not data:
+            return pd.DataFrame()
+        rev = {d["date"]: d.get("revenue") for d in data if d.get("revenue")}
+        if not rev:
+            return pd.DataFrame()
+        series = pd.Series(rev, name="Total Revenue")
+        return pd.DataFrame([series])
     except Exception:
         return pd.DataFrame()
 
 
 def fetch_earnings_calendar(tickers: list) -> list[dict]:
-    upcoming = []
-    for ticker in tickers:
-        try:
-            t   = yf.Ticker(ticker)
-            cal = t.calendar
-            if cal is None:
-                continue
-            dates = cal.get("Earnings Date", [])
-            if isinstance(dates, list) and dates:
-                upcoming.append({"ticker": ticker, "date": str(dates[0])[:10]})
-            elif hasattr(dates, "strftime"):
-                upcoming.append({"ticker": ticker, "date": str(dates)[:10]})
-        except Exception:
-            continue
+    """Upcoming earnings dates via FMP earnings-calendar endpoint."""
+    if not FMP_TOKEN:
+        return []
+    try:
+        from datetime import date, timedelta
+        today = date.today().isoformat()
+        future = (date.today() + timedelta(days=30)).isoformat()
+        resp = requests.get(
+            f"{FMP_BASE}/earning_calendar",
+            params={"from": today, "to": future, "apikey": FMP_TOKEN},
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            return []
+        data = resp.json()
+        ticker_set = set(tickers)
+        return [
+            {"ticker": d["symbol"], "date": d.get("date", "")[:10]}
+            for d in data
+            if d.get("symbol") in ticker_set
+        ]
+    except Exception:
+        return []
     return upcoming
