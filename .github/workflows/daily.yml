@@ -33,4 +33,4 @@ jobs:
           git diff --staged --quiet && echo "No changes to commit" && exit 0
           git commit -m "chore: daily update $(date -u +'%Y-%m-%d %H:%M UTC')"
           git pull --rebase origin main
-          git push
+          git push --force-with-lease
