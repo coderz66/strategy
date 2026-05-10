@@ -1,10 +1,9 @@
 import pandas as pd
 import numpy as np
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import NDX100, MOMENTUM_DISPLAY_N, FUNDAMENTAL_FETCH_N
-from data_fetch import fetch_price_history, fetch_earnings_history, fetch_quarterly_income
+from data_fetch import fetch_price_history, fetch_all_fundamentals
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +11,6 @@ logger = logging.getLogger(__name__)
 # ── Price Momentum ────────────────────────────────────────────────────────────
 
 def compute_price_momentum(price_df: pd.DataFrame) -> pd.DataFrame:
-    """1w / 4w / 12w returns + composite percentile rank for each ticker."""
     rows = []
     for ticker in price_df.columns:
         s = price_df[ticker].dropna()
@@ -31,7 +29,7 @@ def compute_price_momentum(price_df: pd.DataFrame) -> pd.DataFrame:
         })
 
     if not rows:
-        logger.warning("compute_price_momentum: no data rows — price_df may be empty")
+        logger.warning("compute_price_momentum: no data rows")
         return pd.DataFrame(columns=["price", "1w", "4w", "12w", "score"])
 
     df = pd.DataFrame(rows).set_index("ticker")
@@ -44,45 +42,17 @@ def compute_price_momentum(price_df: pd.DataFrame) -> pd.DataFrame:
 
 # ── Fundamental Momentum ──────────────────────────────────────────────────────
 
-def _fundamental_row(ticker: str) -> dict | None:
-    row = {"ticker": ticker}
-    try:
-        eh = fetch_earnings_history(ticker)
-        if eh is not None and not eh.empty:
-            latest = eh.iloc[0]
-            actual   = latest.get("epsActual", np.nan)
-            estimate = latest.get("epsEstimate", np.nan)
-            if pd.notna(actual) and pd.notna(estimate) and estimate != 0:
-                row["eps_beat"] = float((actual - estimate) / abs(estimate))
-                row["eps_actual"]   = float(actual)
-                row["eps_estimate"] = float(estimate)
-    except Exception:
-        pass
-
-    try:
-        inc = fetch_quarterly_income(ticker)
-        if inc is not None and not inc.empty and "Total Revenue" in inc.index:
-            rev = inc.loc["Total Revenue"].dropna()
-            if len(rev) >= 2:
-                row["rev_qoq"] = float((rev.iloc[0] - rev.iloc[1]) / abs(rev.iloc[1]))
-                row["rev_latest"] = float(rev.iloc[0])
-    except Exception:
-        pass
-
-    return row if len(row) > 1 else None
-
-
 def compute_fundamental_momentum(tickers: list = None) -> pd.DataFrame:
     tickers = (tickers or NDX100)[:FUNDAMENTAL_FETCH_N]
-    rows = []
-    with ThreadPoolExecutor(max_workers=12) as ex:
-        futures = {ex.submit(_fundamental_row, t): t for t in tickers}
-        for f in as_completed(futures):
-            r = f.result()
-            if r:
-                rows.append(r)
+    fund    = fetch_all_fundamentals(tickers)
 
-    logger.info(f"compute_fundamental_momentum: {len(rows)} tickers with data out of {len(tickers)} fetched")
+    rows = []
+    for ticker in tickers:
+        data = fund.get(ticker)
+        if data and isinstance(data, dict):
+            rows.append({"ticker": ticker, **data})
+
+    logger.info(f"compute_fundamental_momentum: {len(rows)} tickers with data out of {len(tickers)}")
     if not rows:
         return pd.DataFrame()
 
@@ -108,7 +78,7 @@ def run_screener() -> dict:
     price_df = fetch_price_history(NDX100, period="4mo")
 
     if price_df.empty:
-        logger.warning("Screener: price_df is empty — skipping price momentum, continuing with fundamentals")
+        logger.warning("Screener: price_df is empty — skipping price momentum")
         pm = pd.DataFrame(columns=["price", "1w", "4w", "12w", "score"])
     else:
         logger.info("Screener: computing price momentum…")
