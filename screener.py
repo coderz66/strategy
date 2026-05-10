@@ -107,12 +107,11 @@ def run_screener() -> dict:
     price_df = fetch_price_history(NDX100, period="4mo")
 
     if price_df.empty:
-        logger.error("Screener: price_df is empty — Yahoo Finance may be rate-limiting. Returning empty results.")
-        empty = pd.DataFrame(columns=["price", "1w", "4w", "12w", "score"])
-        return {"price_momentum": empty, "fundamental": pd.DataFrame(), "price_df": price_df}
-
-    logger.info("Screener: computing price momentum…")
-    pm = compute_price_momentum(price_df)
+        logger.warning("Screener: price_df is empty — skipping price momentum, continuing with fundamentals")
+        pm = pd.DataFrame(columns=["price", "1w", "4w", "12w", "score"])
+    else:
+        logger.info("Screener: computing price momentum…")
+        pm = compute_price_momentum(price_df)
 
     logger.info("Screener: computing fundamental momentum…")
     fm = compute_fundamental_momentum()
