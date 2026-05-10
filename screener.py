@@ -30,6 +30,10 @@ def compute_price_momentum(price_df: pd.DataFrame) -> pd.DataFrame:
             "12w":    pct(63),
         })
 
+    if not rows:
+        logger.warning("compute_price_momentum: no data rows — price_df may be empty")
+        return pd.DataFrame(columns=["price", "1w", "4w", "12w", "score"])
+
     df = pd.DataFrame(rows).set_index("ticker")
     for col in ["1w", "4w", "12w"]:
         df[f"_{col}_rank"] = df[col].rank(pct=True, na_option="bottom")
@@ -101,6 +105,11 @@ def compute_fundamental_momentum(tickers: list = None) -> pd.DataFrame:
 def run_screener() -> dict:
     logger.info("Screener: fetching price history…")
     price_df = fetch_price_history(NDX100, period="4mo")
+
+    if price_df.empty:
+        logger.error("Screener: price_df is empty — Yahoo Finance may be rate-limiting. Returning empty results.")
+        empty = pd.DataFrame(columns=["price", "1w", "4w", "12w", "score"])
+        return {"price_momentum": empty, "fundamental": pd.DataFrame(), "price_df": price_df}
 
     logger.info("Screener: computing price momentum…")
     pm = compute_price_momentum(price_df)
