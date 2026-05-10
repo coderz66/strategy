@@ -1,44 +1,53 @@
-import time
 import yfinance as yf
 import pandas as pd
+import pandas_datareader.data as web
 import logging
+from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
-# yf.download() does NOT use curl_cffi and gets blocked by Yahoo on CI/datacenter IPs.
-# Ticker.history() uses curl_cffi (when installed) and bypasses the consent wall.
-# All price fetching uses the Ticker path below.
 
-def _fetch_one(ticker: str, period: str) -> tuple[str, pd.Series | None]:
+# ── Price data via stooq (works from CI; Yahoo Finance blocks GitHub Actions IPs) ──
+
+def _period_days(period: str) -> int:
+    return {"1mo": 35, "3mo": 95, "4mo": 130, "6mo": 185, "1y": 370}.get(period, 130)
+
+
+def _fetch_stooq(ticker: str, start: datetime, end: datetime) -> tuple[str, pd.Series | None]:
     try:
-        hist = yf.Ticker(ticker).history(period=period, interval="1d", auto_adjust=True)
-        if hist.empty:
+        df = web.DataReader(ticker, "stooq", start, end)
+        if df.empty:
             return ticker, None
-        return ticker, hist["Close"].rename(ticker)
+        return ticker, df["Close"].rename(ticker).sort_index()
     except Exception as e:
-        logger.debug(f"{ticker} price fetch failed: {e}")
+        logger.debug(f"{ticker} stooq failed: {e}")
         return ticker, None
 
 
 def fetch_price_history(tickers: list, period: str = "4mo") -> pd.DataFrame:
-    """Daily Close prices via individual Ticker.history() calls (curl_cffi-aware)."""
+    """Daily Close prices via stooq (CI-safe, no API key required)."""
+    end   = datetime.today()
+    start = end - timedelta(days=_period_days(period))
+
     closes: dict[str, pd.Series] = {}
-    with ThreadPoolExecutor(max_workers=8) as ex:
-        futures = {ex.submit(_fetch_one, t, period): t for t in tickers}
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        futures = {ex.submit(_fetch_stooq, t, start, end): t for t in tickers}
         for f in as_completed(futures):
             ticker, series = f.result()
             if series is not None:
                 closes[ticker] = series
 
     if not closes:
-        logger.error("fetch_price_history: all tickers failed — Yahoo Finance may be blocking this IP")
+        logger.error("fetch_price_history: no data from stooq — check network or ticker list")
         return pd.DataFrame()
 
     df = pd.DataFrame(closes).sort_index().dropna(how="all")
-    logger.info(f"fetch_price_history: got {len(df.columns)}/{len(tickers)} tickers, {len(df)} rows")
+    logger.info(f"fetch_price_history: {len(df.columns)}/{len(tickers)} tickers, {len(df)} rows")
     return df
 
+
+# ── Fundamental data via yfinance (individual Ticker calls, lighter than bulk) ──
 
 def fetch_earnings_history(ticker: str) -> pd.DataFrame:
     try:
@@ -58,7 +67,7 @@ def fetch_earnings_calendar(tickers: list) -> list[dict]:
     upcoming = []
     for ticker in tickers:
         try:
-            t = yf.Ticker(ticker)
+            t   = yf.Ticker(ticker)
             cal = t.calendar
             if cal is None:
                 continue
@@ -70,10 +79,3 @@ def fetch_earnings_calendar(tickers: list) -> list[dict]:
         except Exception:
             continue
     return upcoming
-
-
-def fetch_info(ticker: str) -> dict:
-    try:
-        return yf.Ticker(ticker).info or {}
-    except Exception:
-        return {}
