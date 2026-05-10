@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Screener{% endblock %}
+{% block nav_screener %}active{% endblock %}
+{% block masthead_title %}<em>NDX 100</em> Screener{% endblock %}
+
+{% block content %}
+
+<div class="tabs">
+  <button class="tab-btn active" data-group="scr" data-target="tab-price">Price Momentum</button>
+  <button class="tab-btn"        data-group="scr" data-target="tab-fund">Fundamental Momentum</button>
+</div>
+
+<!-- Price Momentum tab -->
+<div id="tab-price" class="tab-panel active" data-group="scr">
+  <div class="section">
+    <div class="s-label">Ranking · Composite Percentile</div>
+    <div class="s-title">Price Momentum — NDX 100</div>
+    <div class="s-divider"></div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:18px;font-family:var(--sans)">
+      Composite score = average of 1W / 4W / 12W return percentile ranks within the NDX 100 universe.
+      Higher score = stronger cross-timeframe momentum.
+    </p>
+    {% if price_rows %}
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Ticker</th>
+            <th>Price</th>
+            <th>1W Ret</th>
+            <th>4W Ret</th>
+            <th>12W Ret</th>
+            <th>Composite Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in price_rows %}
+          <tr>
+            <td class="num" data-v="{{ loop.index }}">{{ loop.index }}</td>
+            <td class="tk">{{ row.ticker }}</td>
+            <td class="num" data-v="{{ row.get('price', 0) }}">{{ fmt_price(row.get('price')) }}</td>
+            <td class="num {{ pct_class(row.get('1w')) }}" data-v="{{ row.get('1w', 0) }}">{{ fmt_pct(row.get('1w')) }}</td>
+            <td class="num {{ pct_class(row.get('4w')) }}" data-v="{{ row.get('4w', 0) }}">{{ fmt_pct(row.get('4w')) }}</td>
+            <td class="num {{ pct_class(row.get('12w')) }}" data-v="{{ row.get('12w', 0) }}">{{ fmt_pct(row.get('12w')) }}</td>
+            <td data-v="{{ row.get('score', 0) }}">
+              <span class="rank-pill">{{ "%.2f"|format(row.get('score', 0)) }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">Data loading — check back in ~90 seconds after startup</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Fundamental Momentum tab -->
+<div id="tab-fund" class="tab-panel" data-group="scr">
+  <div class="section">
+    <div class="s-label">Ranking · EPS Beat + Revenue Growth</div>
+    <div class="s-title">Fundamental Momentum — NDX 100</div>
+    <div class="s-divider"></div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:18px;font-family:var(--sans)">
+      Composite score = average of EPS beat % percentile rank and Revenue QoQ growth percentile rank.
+      EPS beat = (actual − estimate) / |estimate|.
+    </p>
+    {% if fund_rows %}
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Ticker</th>
+            <th>EPS Actual</th>
+            <th>EPS Estimate</th>
+            <th>EPS Beat %</th>
+            <th>Rev QoQ</th>
+            <th>Rev (Latest Q)</th>
+            <th>Composite Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in fund_rows %}
+          <tr>
+            <td class="num" data-v="{{ loop.index }}">{{ loop.index }}</td>
+            <td class="tk">{{ row.ticker }}</td>
+            <td class="num" data-v="{{ row.get('eps_actual', 0) }}">
+              {% if row.get('eps_actual') is not none %}${{ "%.2f"|format(row.get('eps_actual', 0)) }}{% else %}—{% endif %}
+            </td>
+            <td class="num" data-v="{{ row.get('eps_estimate', 0) }}">
+              {% if row.get('eps_estimate') is not none %}${{ "%.2f"|format(row.get('eps_estimate', 0)) }}{% else %}—{% endif %}
+            </td>
+            <td class="num {{ pct_class(row.get('eps_beat')) }}" data-v="{{ row.get('eps_beat', 0) }}">
+              {{ fmt_pct(row.get('eps_beat')) }}
+            </td>
+            <td class="num {{ pct_class(row.get('rev_qoq')) }}" data-v="{{ row.get('rev_qoq', 0) }}">
+              {{ fmt_pct(row.get('rev_qoq')) }}
+            </td>
+            <td class="num" data-v="{{ row.get('rev_latest', 0) }}">{{ fmt_rev(row.get('rev_latest')) }}</td>
+            <td data-v="{{ row.get('score', 0) }}">
+              <span class="rank-pill">{{ "%.2f"|format(row.get('score', 0)) }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">Data loading — check back in ~90 seconds after startup</div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

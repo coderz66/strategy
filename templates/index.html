@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block nav_index %}active{% endblock %}
+{% block masthead_title %}<em>Strategy</em> Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stat cards -->
+<div class="stat-row">
+  <div class="stat-card">
+    <div class="stat-label">Price Anomalies Today</div>
+    <div class="stat-value">{{ anomalies | length }}</div>
+    <div class="stat-sub">≥4% single-day movers in NDX 100</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Top Price Momentum</div>
+    <div class="stat-value num {% if top_price %}{{ pct_class(top_price[0].get('12w', 0)) }}{% endif %}">
+      {% if top_price %}{{ top_price[0].ticker }}{% else %}—{% endif %}
+    </div>
+    <div class="stat-sub">
+      {% if top_price %}
+        12w {{ fmt_pct(top_price[0].get('12w')) }} · 4w {{ fmt_pct(top_price[0].get('4w')) }}
+      {% endif %}
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Top Fundamental Momentum</div>
+    <div class="stat-value num {% if top_fund %}{{ pct_class(top_fund[0].get('eps_beat', 0)) }}{% endif %}">
+      {% if top_fund %}{{ top_fund[0].ticker }}{% else %}—{% endif %}
+    </div>
+    <div class="stat-sub">
+      {% if top_fund %}
+        EPS beat {{ fmt_pct(top_fund[0].get('eps_beat')) }} · Rev QoQ {{ fmt_pct(top_fund[0].get('rev_qoq')) }}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Two-column: screener previews -->
+<div class="two-col" style="margin-bottom:52px">
+
+  <!-- Price Momentum -->
+  <div>
+    <div class="section">
+      <div class="s-label">Screener · Price</div>
+      <div class="s-title">Price Momentum Top 10</div>
+      <div class="s-divider"></div>
+      {% if top_price %}
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Ticker</th><th>Price</th>
+              <th>1W</th><th>4W</th><th>12W</th><th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in top_price %}
+            <tr>
+              <td class="num" data-v="{{ loop.index }}">{{ loop.index }}</td>
+              <td class="tk">{{ row.ticker }}</td>
+              <td class="num" data-v="{{ row.get('price', 0) }}">{{ fmt_price(row.get('price')) }}</td>
+              <td class="num {{ pct_class(row.get('1w')) }}" data-v="{{ row.get('1w', 0) }}">{{ fmt_pct(row.get('1w')) }}</td>
+              <td class="num {{ pct_class(row.get('4w')) }}" data-v="{{ row.get('4w', 0) }}">{{ fmt_pct(row.get('4w')) }}</td>
+              <td class="num {{ pct_class(row.get('12w')) }}" data-v="{{ row.get('12w', 0) }}">{{ fmt_pct(row.get('12w')) }}</td>
+              <td data-v="{{ row.get('score', 0) }}">
+                <span class="rank-pill">{{ "%.2f"|format(row.get('score', 0)) }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;text-align:right">
+        <a href="/screener" style="font-family:var(--mono);font-size:11px;color:var(--gold);text-decoration:none">Full screener →</a>
+      </div>
+      {% else %}
+      <div class="empty">No data — refresh in progress</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Fundamental Momentum -->
+  <div>
+    <div class="section">
+      <div class="s-label">Screener · Fundamental</div>
+      <div class="s-title">Fundamental Momentum Top 10</div>
+      <div class="s-divider"></div>
+      {% if top_fund %}
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Ticker</th>
+              <th>EPS Beat</th><th>Rev QoQ</th><th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in top_fund %}
+            <tr>
+              <td class="num" data-v="{{ loop.index }}">{{ loop.index }}</td>
+              <td class="tk">{{ row.ticker }}</td>
+              <td class="num {{ pct_class(row.get('eps_beat')) }}" data-v="{{ row.get('eps_beat', 0) }}">{{ fmt_pct(row.get('eps_beat')) }}</td>
+              <td class="num {{ pct_class(row.get('rev_qoq')) }}" data-v="{{ row.get('rev_qoq', 0) }}">{{ fmt_pct(row.get('rev_qoq')) }}</td>
+              <td data-v="{{ row.get('score', 0) }}">
+                <span class="rank-pill">{{ "%.2f"|format(row.get('score', 0)) }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;text-align:right">
+        <a href="/screener" style="font-family:var(--mono);font-size:11px;color:var(--gold);text-decoration:none">Full screener →</a>
+      </div>
+      {% else %}
+      <div class="empty">No data — refresh in progress</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Events strip -->
+<div class="two-col">
+
+  <!-- Price anomalies -->
+  <div class="section">
+    <div class="s-label">Events · Today</div>
+    <div class="s-title">Price Anomalies</div>
+    <div class="s-divider"></div>
+    {% if anomalies %}
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Ticker</th><th>Price</th><th>Daily Move</th></tr>
+        </thead>
+        <tbody>
+          {% for a in anomalies %}
+          <tr>
+            <td class="tk">{{ a.ticker }}</td>
+            <td class="num" data-v="{{ a.price }}">{{ fmt_price(a.price) }}</td>
+            <td class="num {{ pct_class(a.ret) }}" data-v="{{ a.ret }}">
+              <span class="badge badge-{{ a.direction }}">{{ fmt_pct(a.ret) }}</span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">No anomalies today (threshold ≥4%)</div>
+    {% endif %}
+    <div style="margin-top:10px;text-align:right">
+      <a href="/events" style="font-family:var(--mono);font-size:11px;color:var(--gold);text-decoration:none">All events →</a>
+    </div>
+  </div>
+
+  <!-- Upcoming earnings -->
+  <div class="section">
+    <div class="s-label">Events · Calendar</div>
+    <div class="s-title">Upcoming Earnings</div>
+    <div class="s-divider"></div>
+    {% if upcoming %}
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Ticker</th><th>Expected Date</th></tr>
+        </thead>
+        <tbody>
+          {% for e in upcoming %}
+          <tr>
+            <td class="tk">{{ e.ticker }}</td>
+            <td class="num">{{ e.date }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty">No upcoming earnings in calendar</div>
+    {% endif %}
+    <div style="margin-top:10px;text-align:right">
+      <a href="/events" style="font-family:var(--mono);font-size:11px;color:var(--gold);text-decoration:none">Full calendar →</a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
