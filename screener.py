@@ -82,6 +82,7 @@ def compute_fundamental_momentum(tickers: list = None) -> pd.DataFrame:
             if r:
                 rows.append(r)
 
+    logger.info(f"compute_fundamental_momentum: {len(rows)} tickers with data out of {len(tickers)} fetched")
     if not rows:
         return pd.DataFrame()
 

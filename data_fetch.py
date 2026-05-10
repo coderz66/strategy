@@ -74,19 +74,25 @@ FMP_TOKEN = os.environ.get("FMP_API_KEY", "")
 FMP_BASE  = "https://financialmodelingprep.com/api/v3"
 
 
+def _fmp_get(url: str, params: dict) -> list | dict | None:
+    """GET from FMP; returns parsed JSON or None on error/rate-limit."""
+    resp = requests.get(url, params=params, timeout=10)
+    if resp.status_code != 200:
+        logger.warning(f"FMP HTTP {resp.status_code}: {url} — {resp.text[:120]}")
+        return None
+    data = resp.json()
+    if isinstance(data, dict) and ("Error Message" in data or "message" in data):
+        logger.warning(f"FMP error for {url}: {data}")
+        return None
+    return data
+
+
 def fetch_earnings_history(ticker: str) -> pd.DataFrame:
     """EPS actual vs estimate via FMP earnings-surprises endpoint."""
     if not FMP_TOKEN:
         return pd.DataFrame()
     try:
-        resp = requests.get(
-            f"{FMP_BASE}/earnings-surprises/{ticker}",
-            params={"apikey": FMP_TOKEN},
-            timeout=10,
-        )
-        if resp.status_code != 200:
-            return pd.DataFrame()
-        data = resp.json()
+        data = _fmp_get(f"{FMP_BASE}/earnings-surprises/{ticker}", {"apikey": FMP_TOKEN})
         if not isinstance(data, list) or not data:
             return pd.DataFrame()
         rows = [
@@ -98,8 +104,11 @@ def fetch_earnings_history(ticker: str) -> pd.DataFrame:
             for d in data
             if d.get("actualEarningResult") is not None
         ]
+        if rows:
+            logger.debug(f"fetch_earnings_history {ticker}: {len(rows)} quarters")
         return pd.DataFrame(rows) if rows else pd.DataFrame()
-    except Exception:
+    except Exception as e:
+        logger.debug(f"fetch_earnings_history {ticker}: {e}")
         return pd.DataFrame()
 
 
@@ -108,14 +117,10 @@ def fetch_quarterly_income(ticker: str) -> pd.DataFrame:
     if not FMP_TOKEN:
         return pd.DataFrame()
     try:
-        resp = requests.get(
+        data = _fmp_get(
             f"{FMP_BASE}/income-statement/{ticker}",
-            params={"period": "quarter", "limit": 4, "apikey": FMP_TOKEN},
-            timeout=10,
+            {"period": "quarter", "limit": 4, "apikey": FMP_TOKEN},
         )
-        if resp.status_code != 200:
-            return pd.DataFrame()
-        data = resp.json()
         if not isinstance(data, list) or not data:
             return pd.DataFrame()
         rev = {d["date"]: d.get("revenue") for d in data if d.get("revenue")}
@@ -123,7 +128,8 @@ def fetch_quarterly_income(ticker: str) -> pd.DataFrame:
             return pd.DataFrame()
         series = pd.Series(rev, name="Total Revenue")
         return pd.DataFrame([series])
-    except Exception:
+    except Exception as e:
+        logger.debug(f"fetch_quarterly_income: {e}")
         return pd.DataFrame()
 
 
