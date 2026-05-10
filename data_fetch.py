@@ -1,45 +1,65 @@
+import os
+import requests
 import yfinance as yf
 import pandas as pd
-import pandas_datareader.data as web
 import logging
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
+TIINGO_TOKEN = os.environ.get("TIINGO_API_KEY", "")
 
-# ── Price data via stooq (works from CI; Yahoo Finance blocks GitHub Actions IPs) ──
+
+# ── Price data via Tiingo (free API key, works from CI) ───────────────────────
 
 def _period_days(period: str) -> int:
     return {"1mo": 35, "3mo": 95, "4mo": 130, "6mo": 185, "1y": 370}.get(period, 130)
 
 
-def _fetch_stooq(ticker: str, start: datetime, end: datetime) -> tuple[str, pd.Series | None]:
+def _fetch_tiingo_ticker(ticker: str, start: str, end: str) -> tuple[str, pd.Series | None]:
     try:
-        df = web.DataReader(ticker, "stooq", start, end)
-        if df.empty:
+        url = f"https://api.tiingo.com/tiingo/daily/{ticker}/prices"
+        resp = requests.get(
+            url,
+            params={"startDate": start, "endDate": end, "token": TIINGO_TOKEN},
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            logger.debug(f"{ticker} Tiingo HTTP {resp.status_code}")
             return ticker, None
-        return ticker, df["Close"].rename(ticker).sort_index()
+        data = resp.json()
+        if not isinstance(data, list) or not data:
+            return ticker, None
+        series = pd.Series(
+            {pd.Timestamp(d["date"][:10]): d.get("adjClose") or d.get("close") for d in data},
+            name=ticker,
+        ).dropna()
+        return ticker, series
     except Exception as e:
-        logger.debug(f"{ticker} stooq failed: {e}")
+        logger.debug(f"{ticker} Tiingo: {e}")
         return ticker, None
 
 
 def fetch_price_history(tickers: list, period: str = "4mo") -> pd.DataFrame:
-    """Daily Close prices via stooq (CI-safe, no API key required)."""
-    end   = datetime.today()
-    start = end - timedelta(days=_period_days(period))
+    """Daily adjusted Close prices via Tiingo (requires TIINGO_API_KEY env var)."""
+    if not TIINGO_TOKEN:
+        logger.error("fetch_price_history: TIINGO_API_KEY not set — add it as a GitHub Secret")
+        return pd.DataFrame()
+
+    end   = datetime.today().strftime("%Y-%m-%d")
+    start = (datetime.today() - timedelta(days=_period_days(period))).strftime("%Y-%m-%d")
 
     closes: dict[str, pd.Series] = {}
     with ThreadPoolExecutor(max_workers=10) as ex:
-        futures = {ex.submit(_fetch_stooq, t, start, end): t for t in tickers}
+        futures = {ex.submit(_fetch_tiingo_ticker, t, start, end): t for t in tickers}
         for f in as_completed(futures):
             ticker, series = f.result()
-            if series is not None:
+            if series is not None and not series.empty:
                 closes[ticker] = series
 
     if not closes:
-        logger.error("fetch_price_history: no data from stooq — check network or ticker list")
+        logger.error("fetch_price_history: no data returned from Tiingo")
         return pd.DataFrame()
 
     df = pd.DataFrame(closes).sort_index().dropna(how="all")
@@ -47,7 +67,7 @@ def fetch_price_history(tickers: list, period: str = "4mo") -> pd.DataFrame:
     return df
 
 
-# ── Fundamental data via yfinance (individual Ticker calls, lighter than bulk) ──
+# ── Fundamental data via yfinance (individual calls, graceful fallback) ───────
 
 def fetch_earnings_history(ticker: str) -> pd.DataFrame:
     try:
