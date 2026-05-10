@@ -26,7 +26,7 @@ def _fetch_tiingo_ticker(ticker: str, start: str, end: str) -> tuple[str, pd.Ser
             timeout=15,
         )
         if resp.status_code != 200:
-            logger.debug(f"{ticker} Tiingo HTTP {resp.status_code}")
+            logger.warning(f"{ticker} Tiingo HTTP {resp.status_code}: {resp.text[:120]}")
             return ticker, None
         data = resp.json()
         if not isinstance(data, list) or not data:
@@ -46,6 +46,7 @@ def fetch_price_history(tickers: list, period: str = "4mo") -> pd.DataFrame:
     if not TIINGO_TOKEN:
         logger.error("fetch_price_history: TIINGO_API_KEY not set — add it as a GitHub Secret")
         return pd.DataFrame()
+    logger.info(f"Tiingo token length: {len(TIINGO_TOKEN)} chars")
 
     end   = datetime.today().strftime("%Y-%m-%d")
     start = (datetime.today() - timedelta(days=_period_days(period))).strftime("%Y-%m-%d")
