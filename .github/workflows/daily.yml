@@ -25,12 +25,9 @@ jobs:
       - name: Run strategy pipeline
         run: python run.py
 
-      - name: Commit and push docs
-        run: |
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name  "github-actions[bot]"
-          git add docs/
-          git diff --staged --quiet && echo "No changes to commit" && exit 0
-          git commit -m "chore: daily update $(date -u +'%Y-%m-%d %H:%M UTC')"
-          git pull --rebase origin main
-          git push --force-with-lease
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs
+          branch: gh-pages
+          clean: false
