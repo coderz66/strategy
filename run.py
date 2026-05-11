@@ -1,6 +1,6 @@
 """
-Daily pipeline entry point.
-Called by GitHub Actions after market close; generates docs/*.html.
+Pipeline entry point — called by GitHub Actions after market close.
+Phase 1: fetch data  →  Phase 2: analyze  →  Phase 3: render HTML
 """
 import os
 import logging
@@ -14,19 +14,28 @@ ET = pytz.timezone("America/New_York")
 
 
 def main():
+    from config import UNIVERSE
+    from data_fetch import fetch_and_save_prices, fetch_and_save_fundamentals, fetch_and_save_calendar
     from screener import run_screener
     from events import run_events
     from renderer import render_index, render_screener, render_events
 
     os.makedirs("docs", exist_ok=True)
+    os.makedirs("data", exist_ok=True)
 
-    logger.info("Running screener…")
+    # ── Phase 1: Fetch ────────────────────────────────────────────────────────
+    logger.info(f"=== FETCH phase — universe: {len(UNIVERSE)} tickers ===")
+    fetch_and_save_prices(UNIVERSE)
+    fetch_and_save_fundamentals(UNIVERSE)
+    fetch_and_save_calendar(UNIVERSE)
+
+    # ── Phase 2: Analyze ──────────────────────────────────────────────────────
+    logger.info("=== ANALYZE phase ===")
     screener_data = run_screener()
+    events_data   = run_events(screener_data.get("price_df"))
 
-    logger.info("Running events pipeline…")
-    events_data = run_events(screener_data.get("price_df"))
-
-    logger.info("Rendering HTML…")
+    # ── Phase 3: Render ───────────────────────────────────────────────────────
+    logger.info("=== RENDER phase ===")
     pages = {
         "docs/index.html":    render_index(screener_data, events_data),
         "docs/screener.html": render_screener(screener_data),
