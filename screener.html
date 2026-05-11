@@ -41,7 +41,7 @@ body { background: var(--bg); color: var(--navy); font-family: var(--sans); line
   color: rgba(255,255,255,.04); pointer-events: none; line-height: 1;
   letter-spacing: -4px;
 }
-.wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+.wrap { max-width: 1440px; margin: 0 auto; padding: 0 40px; }
 .eyebrow {
   font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
   color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
@@ -62,7 +62,7 @@ body { background: var(--bg); color: var(--navy); font-family: var(--sans); line
   border-bottom: 1px solid rgba(255,255,255,.08);
   position: sticky; top: 0; z-index: 100;
 }
-.nav-inner { display: flex; align-items: center; gap: 2px; padding: 0 32px; max-width: 1200px; margin: 0 auto; }
+.nav-inner { display: flex; align-items: center; gap: 2px; padding: 0 40px; max-width: 1440px; margin: 0 auto; }
 .nav a {
   display: block; padding: 11px 18px;
   font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
@@ -78,7 +78,7 @@ body { background: var(--bg); color: var(--navy); font-family: var(--sans); line
 }
 
 /* ── Page layout ──────────────────────────────── */
-.page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 80px; }
+.page { max-width: 1440px; margin: 0 auto; padding: 36px 40px 80px; }
 
 /* ── Section labels ───────────────────────────── */
 .s-label {
@@ -175,7 +175,7 @@ td { padding: 9px 14px; }
   <div class="wrap">
     <div class="eyebrow">Terence Research · Strategy Engine</div>
     <h1 class="masthead-title"><em>NDX 100</em> Screener</h1>
-    <div class="masthead-sub">NDX 100 · Updated 2026-05-10 20:17 ET</div>
+    <div class="masthead-sub">NDX 100 · Updated 2026-05-10 20:27 ET</div>
   </div>
 </header>
 
@@ -184,7 +184,7 @@ td { padding: 9px 14px; }
     <a href="./index.html"    class="">Dashboard</a>
     <a href="./screener.html" class="active">Screener</a>
     <a href="./events.html"   class="">Events</a>
-    <span class="nav-stamp">2026-05-10 20:17 ET</span>
+    <span class="nav-stamp">2026-05-10 20:27 ET</span>
   </div>
 </nav>
 
@@ -248,18 +248,6 @@ td { padding: 9px 14px; }
           
           <tr>
             <td class="num" data-v="3">3</td>
-            <td class="tk">AVGO</td>
-            <td class="num" data-v="430.0">$430.00</td>
-            <td class="num pos" data-v="0.020698822635776715">+2.1%</td>
-            <td class="num pos" data-v="0.1573139550531557">+15.7%</td>
-            <td class="num pos" data-v="0.25273780250641487">+25.3%</td>
-            <td data-v="0.6666666666666666">
-              <span class="rank-pill">0.67</span>
-            </td>
-          </tr>
-          
-          <tr>
-            <td class="num" data-v="4">4</td>
             <td class="tk">TSLA</td>
             <td class="num" data-v="428.35">$428.35</td>
             <td class="num pos" data-v="0.09602886239189412">+9.6%</td>
@@ -271,12 +259,24 @@ td { padding: 9px 14px; }
           </tr>
           
           <tr>
+            <td class="num" data-v="4">4</td>
+            <td class="tk">AVGO</td>
+            <td class="num" data-v="430.0">$430.00</td>
+            <td class="num pos" data-v="0.020698822635776715">+2.1%</td>
+            <td class="num pos" data-v="0.1573139550531557">+15.7%</td>
+            <td class="num pos" data-v="0.25273780250641487">+25.3%</td>
+            <td data-v="0.6666666666666666">
+              <span class="rank-pill">0.67</span>
+            </td>
+          </tr>
+          
+          <tr>
             <td class="num" data-v="5">5</td>
-            <td class="tk">NVDA</td>
-            <td class="num" data-v="215.2">$215.20</td>
-            <td class="num pos" data-v="0.08440413202317965">+8.4%</td>
-            <td class="num pos" data-v="0.14085776387637172">+14.1%</td>
-            <td class="num pos" data-v="0.13245405191872095">+13.2%</td>
+            <td class="tk">AMZN</td>
+            <td class="num" data-v="272.68">$272.68</td>
+            <td class="num pos" data-v="0.016476552598225558">+1.6%</td>
+            <td class="num pos" data-v="0.1438879100595689">+14.4%</td>
+            <td class="num pos" data-v="0.30643924875431194">+30.6%</td>
             <td data-v="0.6333333333333333">
               <span class="rank-pill">0.63</span>
             </td>
@@ -284,11 +284,11 @@ td { padding: 9px 14px; }
           
           <tr>
             <td class="num" data-v="6">6</td>
-            <td class="tk">AMZN</td>
-            <td class="num" data-v="272.68">$272.68</td>
-            <td class="num pos" data-v="0.016476552598225558">+1.6%</td>
-            <td class="num pos" data-v="0.1438879100595689">+14.4%</td>
-            <td class="num pos" data-v="0.30643924875431194">+30.6%</td>
+            <td class="tk">NVDA</td>
+            <td class="num" data-v="215.2">$215.20</td>
+            <td class="num pos" data-v="0.08440413202317965">+8.4%</td>
+            <td class="num pos" data-v="0.14085776387637172">+14.1%</td>
+            <td class="num pos" data-v="0.13245405191872095">+13.2%</td>
             <td data-v="0.6333333333333333">
               <span class="rank-pill">0.63</span>
             </td>
