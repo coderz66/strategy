@@ -41,7 +41,7 @@ body { background: var(--bg); color: var(--navy); font-family: var(--sans); line
   color: rgba(255,255,255,.04); pointer-events: none; line-height: 1;
   letter-spacing: -4px;
 }
-.wrap { max-width: 1440px; margin: 0 auto; padding: 0 40px; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
 .eyebrow {
   font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
   color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
@@ -62,7 +62,7 @@ body { background: var(--bg); color: var(--navy); font-family: var(--sans); line
   border-bottom: 1px solid rgba(255,255,255,.08);
   position: sticky; top: 0; z-index: 100;
 }
-.nav-inner { display: flex; align-items: center; gap: 2px; padding: 0 40px; max-width: 1440px; margin: 0 auto; }
+.nav-inner { display: flex; align-items: center; gap: 2px; padding: 0 32px; max-width: 1200px; margin: 0 auto; }
 .nav a {
   display: block; padding: 11px 18px;
   font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
@@ -78,7 +78,7 @@ body { background: var(--bg); color: var(--navy); font-family: var(--sans); line
 }
 
 /* ── Page layout ──────────────────────────────── */
-.page { max-width: 1440px; margin: 0 auto; padding: 36px 40px 80px; }
+.page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 80px; }
 
 /* ── Section labels ───────────────────────────── */
 .s-label {
@@ -166,6 +166,11 @@ td { padding: 9px 14px; }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
+/* ── Beat / Miss cells ────────────────────────── */
+.beat-cell { background: #dcfce7; color: #15803d; font-family: var(--mono); font-weight: 600; }
+.miss-cell { background: #fee2e2; color: #dc2626; font-family: var(--mono); font-weight: 600; }
+td.na-cell { color: var(--gray); font-style: italic; font-size: 12px; }
+
 /* ── Table sort JS ────────────────────────────── */
 </style>
 </head>
@@ -175,7 +180,7 @@ td { padding: 9px 14px; }
   <div class="wrap">
     <div class="eyebrow">Terence Research · Strategy Engine</div>
     <h1 class="masthead-title"><em>Events</em> Feed</h1>
-    <div class="masthead-sub">NDX 100 · Updated 2026-05-10 20:29 ET</div>
+    <div class="masthead-sub">NDX 100 · Updated 2026-05-10 12:25 ET</div>
   </div>
 </header>
 
@@ -184,7 +189,8 @@ td { padding: 9px 14px; }
     <a href="./index.html"    class="">Dashboard</a>
     <a href="./screener.html" class="">Screener</a>
     <a href="./events.html"   class="active">Events</a>
-    <span class="nav-stamp">2026-05-10 20:29 ET</span>
+    <a href="./earnings.html" class="">Earnings</a>
+    <span class="nav-stamp">2026-05-10 12:25 ET</span>
   </div>
 </nav>
 
@@ -200,91 +206,201 @@ td { padding: 9px 14px; }
     NDX 100 stocks with single-day move ≥ 4%. Sorted by absolute move. No attribution here — use alongside screener to separate alpha from beta.
   </p>
   
-  <div class="tbl-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Ticker</th>
-          <th>Price</th>
-          <th>Daily Move</th>
-          <th>Direction</th>
-        </tr>
-      </thead>
-      <tbody>
-        
-        <tr>
-          <td class="tk">AMD</td>
-          <td class="num" data-v="455.19">$455.19</td>
-          <td class="num pos" data-v="0.11440532732703329">+11.4%</td>
-          <td><span class="badge badge-up">UP</span></td>
-        </tr>
-        
-        <tr>
-          <td class="tk">AVGO</td>
-          <td class="num" data-v="430.0">$430.00</td>
-          <td class="num pos" data-v="0.04227263913127787">+4.2%</td>
-          <td><span class="badge badge-up">UP</span></td>
-        </tr>
-        
-        <tr>
-          <td class="tk">TSLA</td>
-          <td class="num" data-v="428.35">$428.35</td>
-          <td class="num pos" data-v="0.04021467252725904">+4.0%</td>
-          <td><span class="badge badge-up">UP</span></td>
-        </tr>
-        
-      </tbody>
-    </table>
-  </div>
+  <div class="empty">No anomalies today — no NDX 100 stock moved ≥4%</div>
   
 </div>
 
 <!-- Recent Earnings Results -->
 <div class="section">
-  <div class="s-label">Earnings · Recent Results</div>
-  <div class="s-title">EPS Beat / Miss — Last Reported Quarter</div>
+  <div class="s-label">Earnings · W19 · May 5–9 2026</div>
+  <div class="s-title">EPS Beat / Miss — Q1 2026</div>
   <div class="s-divider"></div>
-  <p style="font-size:13px;color:var(--gray);margin-bottom:18px;font-family:var(--sans)">
-    Most recent reported quarter for each ticker. Beat % = (actual − estimate) / |estimate|.
-    Sorted by absolute beat magnitude.
-  </p>
-  
-  <div class="empty">No earnings data — loading in progress</div>
-  
+
+  <div class="stat-row" id="earn-stats" style="display:none">
+    <div class="stat-card">
+      <div class="stat-label">Reported (Rev &gt;$1B)</div>
+      <div class="stat-value" id="st-total">—</div>
+      <div class="stat-sub">with EPS actual data</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#15803d">
+      <div class="stat-label">Beat</div>
+      <div class="stat-value pos" id="st-beat">—</div>
+      <div class="stat-sub" id="st-rate">beat rate —%</div>
+    </div>
+    <div class="stat-card" style="border-left-color:#dc2626">
+      <div class="stat-label">Miss</div>
+      <div class="stat-value neg" id="st-miss">—</div>
+      <div class="stat-sub">EPS below estimate</div>
+    </div>
+  </div>
+
+  <div class="tbl-wrap" id="earn-wrap" style="display:none">
+    <table id="earn-tbl">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Ticker</th>
+          <th>EPS Act</th>
+          <th>EPS Est</th>
+          <th>EPS Δ%</th>
+          <th>Rev Act</th>
+          <th>Rev Est</th>
+          <th>Rev Δ%</th>
+        </tr>
+      </thead>
+      <tbody id="earn-body"></tbody>
+    </table>
+  </div>
+  <div class="empty" id="earn-empty">Loading earnings data…</div>
 </div>
 
-<!-- Upcoming Earnings Calendar -->
+<!-- Earnings by Day -->
 <div class="section">
-  <div class="s-label">Earnings · Calendar</div>
-  <div class="s-title">Upcoming Earnings Dates</div>
+  <div class="s-label">Earnings · Calendar · W19</div>
+  <div class="s-title">Results by Day</div>
   <div class="s-divider"></div>
-  
-  <div class="empty">No upcoming earnings dates in yfinance calendar</div>
-  
+
+  <div class="tabs" id="day-tabs">
+    <button class="tab-btn active" data-group="day" data-target="day-all">All</button>
+    <button class="tab-btn" data-group="day" data-target="day-0505">Mon 5/5</button>
+    <button class="tab-btn" data-group="day" data-target="day-0506">Tue 5/6</button>
+    <button class="tab-btn" data-group="day" data-target="day-0507">Wed 5/7</button>
+    <button class="tab-btn" data-group="day" data-target="day-0508">Thu 5/8</button>
+    <button class="tab-btn" data-group="day" data-target="day-0509">Fri 5/9</button>
+  </div>
+
+  <div id="day-all"  class="tab-panel active"><div class="empty" id="cal-all-empty">Loading…</div></div>
+  <div id="day-0505" class="tab-panel"><div class="empty" id="cal-0505-empty">Loading…</div></div>
+  <div id="day-0506" class="tab-panel"><div class="empty" id="cal-0506-empty">Loading…</div></div>
+  <div id="day-0507" class="tab-panel"><div class="empty" id="cal-0507-empty">Loading…</div></div>
+  <div id="day-0508" class="tab-panel"><div class="empty" id="cal-0508-empty">Loading…</div></div>
+  <div id="day-0509" class="tab-panel"><div class="empty" id="cal-0509-empty">Loading…</div></div>
 </div>
 
 
 </main>
 
 <script>
-// ── Table sort ────────────────────────────────────────────────────────────────
-document.querySelectorAll('thead th').forEach(th => {
-  th.addEventListener('click', () => {
-    const table = th.closest('table');
-    const idx   = [...th.parentElement.children].indexOf(th);
-    const asc   = !th.classList.contains('asc');
-    table.querySelectorAll('thead th').forEach(h => h.classList.remove('asc', 'desc'));
-    th.classList.add(asc ? 'asc' : 'desc');
-    const tbody = table.querySelector('tbody');
-    [...tbody.rows].sort((a, b) => {
-      const av = a.cells[idx]?.dataset.v ?? a.cells[idx]?.textContent ?? '';
-      const bv = b.cells[idx]?.dataset.v ?? b.cells[idx]?.textContent ?? '';
-      const an = parseFloat(av), bn = parseFloat(bv);
-      const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
-      return asc ? cmp : -cmp;
-    }).forEach(r => tbody.appendChild(r));
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmtR = v => {
+  if (!v) return '—';
+  if (Math.abs(v) >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
+  if (Math.abs(v) >= 1e6) return '$' + Math.round(v/1e6) + 'M';
+  return '—';
+};
+const fmtE  = v => v == null ? '—' : v.toFixed(2);
+const epPct = (a, e) => (a == null || e == null || e === 0) ? null : (a - e) / Math.abs(e) * 100;
+
+// ── Load earnings ─────────────────────────────────────────────────────────────
+fetch('./data/2026-W19.json').then(r => r.json()).then(d => {
+  const all = d.records
+    .map(r => ({ ...r, pct: epPct(r.eps_a, r.eps_e) }))
+    .filter(r => r.rev_a != null && r.rev_a >= 1e9)
+    .sort((a, b) => (b.rev_a ?? 0) - (a.rev_a ?? 0));
+
+  // ── Stat cards ──────────────────────────────────────────────────────────────
+  const withEst = all.filter(r => r.pct != null);
+  const beats   = withEst.filter(r => r.pct >= 0);
+  const misses  = withEst.filter(r => r.pct  < 0);
+  const rate    = withEst.length ? Math.round(beats.length / withEst.length * 100) : 0;
+  document.getElementById('st-total').textContent = all.length;
+  document.getElementById('st-beat').textContent  = beats.length;
+  document.getElementById('st-miss').textContent  = misses.length;
+  document.getElementById('st-rate').textContent  = `beat rate ${rate}%`;
+  document.getElementById('earn-stats').style.display = '';
+  document.getElementById('earn-empty').style.display = 'none';
+  document.getElementById('earn-wrap').style.display  = '';
+
+  // ── Main table rows ──────────────────────────────────────────────────────────
+  document.getElementById('earn-body').innerHTML = all.map(r => {
+    const p = r.pct;
+    const epTd = p == null
+      ? `<td class="na-cell" data-v="">N/A</td>`
+      : `<td class="${p >= 0 ? 'beat-cell' : 'miss-cell'}" data-v="${p.toFixed(2)}">${p >= 0 ? '+' : ''}${p.toFixed(1)}%</td>`;
+    const rvp  = (r.rev_a && r.rev_e && r.rev_e > 0) ? (r.rev_a - r.rev_e) / r.rev_e * 100 : null;
+    const rvTd = rvp == null
+      ? `<td class="num" data-v="">—</td>`
+      : `<td class="num ${rvp >= 0 ? 'pos' : 'neg'}" data-v="${rvp.toFixed(2)}">${rvp >= 0 ? '+' : ''}${rvp.toFixed(1)}%</td>`;
+    return `<tr>
+      <td class="num">${r.date}</td>
+      <td class="tk">${r.sym}</td>
+      <td class="num" data-v="${r.eps_a ?? ''}">${fmtE(r.eps_a)}</td>
+      <td class="num" data-v="${r.eps_e ?? ''}">${fmtE(r.eps_e)}</td>
+      ${epTd}
+      <td class="num" data-v="${r.rev_a ?? ''}">${fmtR(r.rev_a)}</td>
+      <td class="num" data-v="${r.rev_e ?? ''}">${fmtR(r.rev_e)}</td>
+      ${rvTd}
+    </tr>`;
+  }).join('');
+
+  // ── Calendar by day ───────────────────────────────────────────────────────────
+  const days = {
+    'all':    { id: 'cal-all-empty',  panelId: 'day-all',  rows: all },
+    '2026-05-05': { id: 'cal-0505-empty', panelId: 'day-0505', rows: all.filter(r => r.date === '2026-05-05') },
+    '2026-05-06': { id: 'cal-0506-empty', panelId: 'day-0506', rows: all.filter(r => r.date === '2026-05-06') },
+    '2026-05-07': { id: 'cal-0507-empty', panelId: 'day-0507', rows: all.filter(r => r.date === '2026-05-07') },
+    '2026-05-08': { id: 'cal-0508-empty', panelId: 'day-0508', rows: all.filter(r => r.date === '2026-05-08') },
+    '2026-05-09': { id: 'cal-0509-empty', panelId: 'day-0509', rows: all.filter(r => r.date === '2026-05-09') },
+  };
+
+  Object.entries(days).forEach(([, cfg]) => {
+    const panel = document.getElementById(cfg.panelId);
+    if (!cfg.rows.length) {
+      document.getElementById(cfg.id).textContent = 'No data for this day';
+      return;
+    }
+    panel.innerHTML = `<div class="tbl-wrap"><table>
+      <thead><tr>
+        <th>Ticker</th><th>EPS Act</th><th>EPS Est</th><th>EPS Δ%</th>
+        <th>Rev Act</th><th>Rev Est</th>
+      </tr></thead>
+      <tbody>${cfg.rows.map(r => {
+        const p = r.pct;
+        const epTd = p == null
+          ? `<td class="na-cell" data-v="">N/A</td>`
+          : `<td class="${p >= 0 ? 'beat-cell' : 'miss-cell'}" data-v="${p.toFixed(2)}">${p >= 0 ? '+' : ''}${p.toFixed(1)}%</td>`;
+        return `<tr>
+          <td class="tk">${r.sym}</td>
+          <td class="num" data-v="${r.eps_a ?? ''}">${fmtE(r.eps_a)}</td>
+          <td class="num" data-v="${r.eps_e ?? ''}">${fmtE(r.eps_e)}</td>
+          ${epTd}
+          <td class="num">${fmtR(r.rev_a)}</td>
+          <td class="num">${fmtR(r.rev_e)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
   });
+
+  // re-bind sort to newly created tables
+  bindSort();
+
+}).catch(() => {
+  document.getElementById('earn-empty').textContent = 'Failed to load data/2026-W19.json';
 });
+
+// ── Table sort ────────────────────────────────────────────────────────────────
+function bindSort() {
+  document.querySelectorAll('thead th').forEach(th => {
+    if (th._sortBound) return;
+    th._sortBound = true;
+    th.addEventListener('click', () => {
+      const table = th.closest('table');
+      const idx   = [...th.parentElement.children].indexOf(th);
+      const asc   = !th.classList.contains('asc');
+      table.querySelectorAll('thead th').forEach(h => h.classList.remove('asc', 'desc'));
+      th.classList.add(asc ? 'asc' : 'desc');
+      const tbody = table.querySelector('tbody');
+      [...tbody.rows].sort((a, b) => {
+        const av = a.cells[idx]?.dataset.v ?? a.cells[idx]?.textContent ?? '';
+        const bv = b.cells[idx]?.dataset.v ?? b.cells[idx]?.textContent ?? '';
+        const an = parseFloat(av), bn = parseFloat(bv);
+        const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
+        return asc ? cmp : -cmp;
+      }).forEach(r => tbody.appendChild(r));
+    });
+  });
+}
+bindSort();
 
 // ── Tab switcher ──────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -294,6 +410,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll(`.tab-panel[data-group="${group}"]`).forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.target).classList.add('active');
+    bindSort();
   });
 });
 </script>
