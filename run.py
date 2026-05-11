@@ -14,8 +14,8 @@ ET = pytz.timezone("America/New_York")
 
 
 def main():
-    from config import UNIVERSE
-    from data_fetch import fetch_and_save_prices, fetch_and_save_fundamentals, fetch_and_save_calendar
+    from config import UNIVERSE, PRICE_SOURCE
+    from data_fetch import fetch_and_save_prices, fetch_and_save_calendar
     from screener import run_screener
     from events import run_events
     from renderer import render_index, render_screener, render_events
@@ -24,9 +24,8 @@ def main():
     os.makedirs("data", exist_ok=True)
 
     # ── Phase 1: Fetch ────────────────────────────────────────────────────────
-    logger.info(f"=== FETCH phase — universe: {len(UNIVERSE)} tickers ===")
+    logger.info(f"=== FETCH phase | universe={len(UNIVERSE)} tickers | source={PRICE_SOURCE} ===")
     fetch_and_save_prices(UNIVERSE)
-    fetch_and_save_fundamentals(UNIVERSE)
     fetch_and_save_calendar(UNIVERSE)
 
     # ── Phase 2: Analyze ──────────────────────────────────────────────────────

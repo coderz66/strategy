@@ -25,9 +25,17 @@ NDX100 = [
 
 UNIVERSE = TEST_TICKERS if TEST_MODE else NDX100
 
+# ── Price data source ─────────────────────────────────────────────────────────
+# "auto"  → use USER_CSV if it exists, otherwise fall back to Tiingo API
+# "api"   → always use Tiingo API
+# "csv"   → always read from USER_CSV (no API calls)
+
+PRICE_SOURCE  = "auto"
+USER_CSV_PATH = "data/user_prices.csv"
+
 # ── Pipeline constants ────────────────────────────────────────────────────────
 
 PRICE_ANOMALY_THRESHOLD = 0.04   # ≥4% daily move
 MOMENTUM_DISPLAY_N      = 20     # rows shown in screener tables
 FUND_STALE_DAYS         = 7      # days before re-fetching fundamentals
-PRICE_FETCH_PERIOD      = "4mo"  # default lookback for initial price pull
+PRICE_FETCH_PERIOD      = "4mo"  # default lookback for initial Tiingo pull
