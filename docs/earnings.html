@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earnings — Terence Research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Karla:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:      #F4F2ED;
+  --navy:    #1B2635;
+  --navy-lt: #253347;
+  --gold:    #B8870A;
+  --gold-hi: #D4A017;
+  --green:   #15803d;
+  --red:     #dc2626;
+  --green-bg: rgba(21,128,61,0.09);
+  --red-bg:   rgba(220,38,38,0.09);
+  --gray:    #6b7280;
+  --border:  #ddd9d0;
+  --mono:    'JetBrains Mono', monospace;
+  --serif:   'Cormorant Garamond', Georgia, serif;
+  --sans:    'Karla', system-ui, sans-serif;
+}
+html { font-size: 15px; }
+body { background: var(--bg); color: var(--navy); font-family: var(--sans); line-height: 1.55; }
+
+/* ── Masthead ── */
+.masthead {
+  position: relative; overflow: hidden;
+  background: var(--navy);
+  border-bottom: 3px solid var(--gold);
+  padding: 28px 0 22px;
+}
+.masthead::after {
+  content: 'EARNINGS';
+  position: absolute; right: 40px; bottom: -10px;
+  font-family: var(--serif); font-size: 130px; font-weight: 700;
+  color: rgba(255,255,255,.04); pointer-events: none; line-height: 1;
+  letter-spacing: -4px;
+}
+.wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+.eyebrow {
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
+  color: var(--gold); text-transform: uppercase; margin-bottom: 6px;
+}
+.masthead-title {
+  font-family: var(--serif); font-size: 38px; font-weight: 700;
+  color: #fff; line-height: 1.1; margin-bottom: 6px;
+}
+.masthead-title em { color: var(--gold-hi); font-style: normal; }
+.masthead-sub {
+  font-size: 13px; color: rgba(255,255,255,.55); font-weight: 300;
+  font-family: var(--mono);
+}
+.pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.pill {
+  font-family: var(--mono); font-size: 10px; padding: 3px 10px;
+  border-radius: 10px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.8);
+}
+.pill.green { background: rgba(21,128,61,.25); color: #6fcf97; }
+.pill.red   { background: rgba(220,38,38,.22); color: #f9a8b0; }
+
+/* ── Nav ── */
+.nav {
+  background: var(--navy-lt);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  position: sticky; top: 0; z-index: 30;
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 32px;
+  display: flex; align-items: center; gap: 4px;
+}
+.nav a {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em;
+  text-transform: uppercase; text-decoration: none;
+  color: rgba(255,255,255,.55);
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.nav a:hover   { color: rgba(255,255,255,.9); }
+.nav a.active  { color: var(--gold-hi); border-bottom-color: var(--gold-hi); }
+.nav-stamp {
+  margin-left: auto; font-family: var(--mono); font-size: 10px;
+  color: rgba(255,255,255,.3);
+}
+
+/* ── Filter Bar ── */
+.filter-bar {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 0;
+  position: sticky; top: 37px; z-index: 20;
+}
+.filter-inner { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.flabel {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--gold); flex-shrink: 0;
+}
+.fbtn {
+  font-family: var(--mono); font-size: 10px;
+  padding: 4px 11px; border: 1px solid var(--border);
+  background: transparent; color: var(--navy);
+  cursor: pointer; border-radius: 2px; transition: all .12s;
+}
+.fbtn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.fsep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+/* ── Summary Strip ── */
+.summary-strip {
+  display: flex; gap: 28px;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+.ss { display: flex; flex-direction: column; gap: 2px; }
+.ss-num { font-family: var(--mono); font-size: 20px; font-weight: 500; }
+.ss-num.g { color: var(--green); }
+.ss-num.r { color: var(--red); }
+.ss-lbl { font-size: 10.5px; color: var(--gray); text-transform: uppercase; letter-spacing: .07em; }
+
+/* ── Table ── */
+.result-count {
+  font-family: var(--mono); font-size: 10px; color: var(--gray);
+  padding: 8px 0 4px; letter-spacing: .04em;
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead {
+  background: var(--navy); color: #fff;
+  position: sticky; top: 74px; z-index: 10;
+}
+th {
+  padding: 8px 11px;
+  font-family: var(--mono); font-size: 9px; font-weight: 500;
+  letter-spacing: .08em; text-transform: uppercase;
+  text-align: left; white-space: nowrap;
+  cursor: pointer; user-select: none;
+}
+th:hover { background: var(--navy-lt); }
+th .arr { margin-left: 3px; opacity: .35; font-size: 9px; }
+th.asc  .arr::after { content: '↑'; opacity: 1; }
+th.desc .arr::after { content: '↓'; opacity: 1; }
+th:not(.asc):not(.desc) .arr::after { content: '↕'; }
+td { padding: 6px 11px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td.mono { font-family: var(--mono); }
+td.g    { color: var(--green); font-family: var(--mono); }
+td.r    { color: var(--red);   font-family: var(--mono); }
+td.beat { background: var(--green-bg); color: var(--green); font-family: var(--mono); font-weight: 600; }
+td.miss { background: var(--red-bg);   color: var(--red);   font-family: var(--mono); font-weight: 600; }
+td.na   { color: var(--gray); font-style: italic; }
+tr:hover td      { background: rgba(27,38,53,.03); }
+tr:hover td.beat { background: rgba(21,128,61,.15); }
+tr:hover td.miss { background: rgba(220,38,38,.14); }
+.empty { text-align: center; padding: 50px; color: var(--gray); font-size: 13px; display: none; }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Q1 2026 · EARNINGS SEASON · WEEK OF MAY 5–9</div>
+    <h1 class="masthead-title">财报 <em>日历</em> · Earnings Calendar</h1>
+    <div class="masthead-sub">Finnhub · 1,442 reported · 1,109 with actual EPS data</div>
+    <div class="pills" id="pills">
+      <span class="pill" id="p-total">Loading…</span>
+      <span class="pill green" id="p-beat">—</span>
+      <span class="pill red"   id="p-miss">—</span>
+      <span class="pill" id="p-rate">—</span>
+    </div>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="./index.html">Dashboard</a>
+    <a href="./screener.html">Screener</a>
+    <a href="./events.html">Events</a>
+    <a href="./earnings.html" class="active">Earnings</a>
+    <span class="nav-stamp" id="nav-stamp">2026-W19 · May 5–9</span>
+  </div>
+</nav>
+
+<div class="filter-bar">
+  <div class="wrap">
+    <div class="filter-inner">
+      <span class="flabel">Date</span>
+      <div id="fg-date" style="display:flex;gap:4px">
+        <button class="fbtn active" data-date="all">All</button>
+        <button class="fbtn" data-date="2026-05-05">Mon 5/5</button>
+        <button class="fbtn" data-date="2026-05-06">Tue 5/6</button>
+        <button class="fbtn" data-date="2026-05-07">Wed 5/7</button>
+        <button class="fbtn" data-date="2026-05-08">Thu 5/8</button>
+        <button class="fbtn" data-date="2026-05-09">Fri 5/9</button>
+      </div>
+      <div class="fsep"></div>
+      <span class="flabel">Rev</span>
+      <div id="fg-rev" style="display:flex;gap:4px">
+        <button class="fbtn active" data-rev="0">All</button>
+        <button class="fbtn" data-rev="1e9">&gt;$1B</button>
+        <button class="fbtn" data-rev="5e9">&gt;$5B</button>
+        <button class="fbtn" data-rev="1e10">&gt;$10B</button>
+      </div>
+      <div class="fsep"></div>
+      <span class="flabel">Result</span>
+      <div id="fg-result" style="display:flex;gap:4px">
+        <button class="fbtn active" data-result="all">All</button>
+        <button class="fbtn" data-result="beat">Beat</button>
+        <button class="fbtn" data-result="miss">Miss</button>
+        <button class="fbtn" data-result="na">N/A</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" style="padding:0 32px 80px">
+  <div class="summary-strip">
+    <div class="ss"><span class="ss-num" id="s-total">—</span><span class="ss-lbl">Reported w/ EPS</span></div>
+    <div class="ss"><span class="ss-num g" id="s-beat">—</span><span class="ss-lbl">Beat</span></div>
+    <div class="ss"><span class="ss-num r" id="s-miss">—</span><span class="ss-lbl">Miss</span></div>
+    <div class="ss"><span class="ss-num" id="s-rate">—</span><span class="ss-lbl">Beat Rate</span></div>
+    <div class="ss"><span class="ss-num" id="s-med">—</span><span class="ss-lbl">Median EPS Δ</span></div>
+  </div>
+
+  <div class="result-count" id="rc">— results</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-col="date">Date<span class="arr"></span></th>
+          <th data-col="sym">Ticker<span class="arr"></span></th>
+          <th data-col="eps_a">EPS Act<span class="arr"></span></th>
+          <th data-col="eps_e">EPS Est<span class="arr"></span></th>
+          <th data-col="eps_pct">EPS Δ%<span class="arr"></span></th>
+          <th data-col="rev_a">Rev Act<span class="arr"></span></th>
+          <th data-col="rev_e">Rev Est<span class="arr"></span></th>
+          <th data-col="rev_pct">Rev Δ%<span class="arr"></span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty">No results for current filters</div>
+  </div>
+</div>
+
+<script>
+const fmtR = v => {
+  if (!v) return null;
+  if (Math.abs(v) >= 1e9) return '$' + (v/1e9).toFixed(1) + 'B';
+  if (Math.abs(v) >= 1e6) return '$' + Math.round(v/1e6) + 'M';
+  return null;
+};
+const fmtE = v => v == null ? null : v.toFixed(2);
+const pct  = (a, e) => (a == null || e == null || e === 0) ? null : (a - e) / Math.abs(e) * 100;
+
+let data = [], sortCol = 'rev_a', sortDir = -1;
+let f = { date: 'all', rev: 0, result: 'all' };
+
+fetch('./data/2026-W19.json').then(r => r.json()).then(d => {
+  data = d.records.map(r => ({ ...r, eps_pct: pct(r.eps_a, r.eps_e), rev_pct: pct(r.rev_a, r.rev_e) }));
+  initSummary(); render();
+}).catch(() => {
+  document.getElementById('tbody').innerHTML =
+    '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--gray)">Failed to load data/2026-W19.json</td></tr>';
+});
+
+function initSummary() {
+  const w = data.filter(r => r.eps_pct != null);
+  const b = w.filter(r => r.eps_pct >= 0), m = w.filter(r => r.eps_pct < 0);
+  const rate = w.length ? Math.round(b.length / w.length * 100) : 0;
+  const pcts = w.map(r => r.eps_pct).sort((a,b) => a-b);
+  const med  = pcts.length ? pcts[Math.floor(pcts.length/2)].toFixed(1) : '—';
+  document.getElementById('p-total').textContent = data.length + ' reported';
+  document.getElementById('p-beat').textContent  = 'Beat ' + b.length;
+  document.getElementById('p-miss').textContent  = 'Miss ' + m.length;
+  document.getElementById('p-rate').textContent  = 'Beat Rate ' + rate + '%';
+  document.getElementById('s-total').textContent = data.length;
+  document.getElementById('s-beat').textContent  = b.length;
+  document.getElementById('s-miss').textContent  = m.length;
+  document.getElementById('s-rate').textContent  = rate + '%';
+  document.getElementById('s-med').textContent   = (med > 0 ? '+' : '') + med + '%';
+}
+
+function rows() {
+  return data.filter(r => {
+    if (f.date   !== 'all' && r.date   !== f.date)            return false;
+    if (f.rev    > 0       && (r.rev_a == null || r.rev_a < f.rev)) return false;
+    if (f.result === 'beat' && (r.eps_pct == null || r.eps_pct < 0))  return false;
+    if (f.result === 'miss' && (r.eps_pct == null || r.eps_pct >= 0)) return false;
+    if (f.result === 'na'   && r.eps_pct != null)              return false;
+    return true;
+  }).sort((a, b) => {
+    const av = a[sortCol] ?? (sortDir === -1 ? -Infinity : Infinity);
+    const bv = b[sortCol] ?? (sortDir === -1 ? -Infinity : Infinity);
+    return typeof av === 'string' ? sortDir * av.localeCompare(bv) : sortDir * (bv - av);
+  });
+}
+
+function render() {
+  const rs = rows();
+  const tb = document.getElementById('tbody');
+  const em = document.getElementById('empty');
+  document.getElementById('rc').textContent = `Showing ${rs.length} of ${data.length}`;
+  if (!rs.length) { tb.innerHTML = ''; em.style.display = 'block'; return; }
+  em.style.display = 'none';
+  tb.innerHTML = rs.map(r => {
+    const ep = r.eps_pct, rv = r.rev_pct;
+    const epTd = ep == null
+      ? `<td class="na">N/A</td>`
+      : `<td class="${ep >= 0 ? 'beat' : 'miss'}">${ep >= 0 ? '+' : ''}${ep.toFixed(1)}%</td>`;
+    const rvTd = rv == null
+      ? `<td class="na">—</td>`
+      : `<td class="${rv >= 0 ? 'g' : 'r'}">${rv >= 0 ? '+' : ''}${rv.toFixed(1)}%</td>`;
+    return `<tr>
+      <td class="mono">${r.date}</td>
+      <td class="mono" style="font-weight:600">${r.sym}</td>
+      <td class="mono">${fmtE(r.eps_a) ?? '<span class="na">—</span>'}</td>
+      <td class="mono">${fmtE(r.eps_e) ?? '<span class="na">—</span>'}</td>
+      ${epTd}
+      <td class="mono">${fmtR(r.rev_a) ?? '<span class="na">—</span>'}</td>
+      <td class="mono">${fmtR(r.rev_e) ?? '<span class="na">—</span>'}</td>
+      ${rvTd}
+    </tr>`;
+  }).join('');
+}
+
+// Filters
+['fg-date','fg-rev','fg-result'].forEach(gid => {
+  document.getElementById(gid).addEventListener('click', e => {
+    const btn = e.target.closest('.fbtn'); if (!btn) return;
+    [...btn.parentElement.querySelectorAll('.fbtn')].forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (gid === 'fg-date')   f.date   = btn.dataset.date;
+    if (gid === 'fg-rev')    f.rev    = parseFloat(btn.dataset.rev);
+    if (gid === 'fg-result') f.result = btn.dataset.result;
+    render();
+  });
+});
+
+// Sort
+document.querySelectorAll('th[data-col]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    sortDir = sortCol === col ? sortDir * -1 : -1;
+    sortCol = col;
+    document.querySelectorAll('th').forEach(t => t.classList.remove('asc','desc'));
+    th.classList.add(sortDir === -1 ? 'desc' : 'asc');
+    render();
+  });
+});
+</script>
+</body>
+</html>
