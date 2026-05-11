@@ -50,8 +50,8 @@
         <table>
           <thead>
             <tr>
-              <th>#</th><th>Ticker</th><th>Price</th>
-              <th>1W</th><th>4W</th><th>12W</th><th>Score</th>
+              <th>#</th><th>Ticker</th>
+              <th>1D</th><th>3D</th><th>1W</th><th>4W</th><th>12W</th><th>Score</th>
             </tr>
           </thead>
           <tbody>
@@ -59,7 +59,8 @@
             <tr>
               <td class="num" data-v="{{ loop.index }}">{{ loop.index }}</td>
               <td class="tk">{{ row.ticker }}</td>
-              <td class="num" data-v="{{ row.get('price', 0) }}">{{ fmt_price(row.get('price')) }}</td>
+              <td class="num {{ pct_class(row.get('1d')) }}" data-v="{{ row.get('1d', 0) }}">{{ fmt_pct(row.get('1d')) }}</td>
+              <td class="num {{ pct_class(row.get('3d')) }}" data-v="{{ row.get('3d', 0) }}">{{ fmt_pct(row.get('3d')) }}</td>
               <td class="num {{ pct_class(row.get('1w')) }}" data-v="{{ row.get('1w', 0) }}">{{ fmt_pct(row.get('1w')) }}</td>
               <td class="num {{ pct_class(row.get('4w')) }}" data-v="{{ row.get('4w', 0) }}">{{ fmt_pct(row.get('4w')) }}</td>
               <td class="num {{ pct_class(row.get('12w')) }}" data-v="{{ row.get('12w', 0) }}">{{ fmt_pct(row.get('12w')) }}</td>

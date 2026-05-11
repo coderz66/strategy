@@ -22,7 +22,7 @@ def compute_price_momentum(price_df: pd.DataFrame = None) -> pd.DataFrame:
     rows = []
     for ticker in price_df.columns:
         s = price_df[ticker].dropna()
-        if len(s) < 6:
+        if len(s) < 2:
             continue
 
         def pct(n):
@@ -30,20 +30,21 @@ def compute_price_momentum(price_df: pd.DataFrame = None) -> pd.DataFrame:
 
         rows.append({
             "ticker": ticker,
-            "price":  round(float(s.iloc[-1]), 2),
-            "1w":     pct(6),
-            "4w":     pct(21),
-            "12w":    pct(63),
+            "1d":  pct(2),
+            "3d":  pct(4),
+            "1w":  pct(6),
+            "4w":  pct(21),
+            "12w": pct(63),
         })
 
     if not rows:
-        return pd.DataFrame(columns=["price", "1w", "4w", "12w", "score"])
+        return pd.DataFrame(columns=["1d", "3d", "1w", "4w", "12w", "score"])
 
     df = pd.DataFrame(rows).set_index("ticker")
-    for col in ["1w", "4w", "12w"]:
+    for col in ["1d", "3d", "1w", "4w", "12w"]:
         df[f"_{col}_r"] = df[col].rank(pct=True, na_option="bottom")
-    df["score"] = df[["_1w_r", "_4w_r", "_12w_r"]].mean(axis=1)
-    df.drop(columns=["_1w_r", "_4w_r", "_12w_r"], inplace=True)
+    df["score"] = df[["_1d_r", "_3d_r", "_1w_r", "_4w_r", "_12w_r"]].mean(axis=1)
+    df.drop(columns=[c for c in df.columns if c.startswith("_")], inplace=True)
     return df.sort_values("score", ascending=False)
 
 
